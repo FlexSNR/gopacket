@@ -49,6 +49,7 @@ const (
 	EthernetTypeNortelDiscovery             EthernetType = 0x01a2
 	EthernetTypeTransparentEthernetBridging EthernetType = 0x6558
 	EthernetTypeDot1Q                       EthernetType = 0x8100
+	EthernetTypeSlowProtocol                EthernetType = 0x8809
 	EthernetTypePPPoEDiscovery              EthernetType = 0x8863
 	EthernetTypePPPoESession                EthernetType = 0x8864
 	EthernetTypeMPLSUnicast                 EthernetType = 0x8847
@@ -57,6 +58,27 @@ const (
 	EthernetTypeQinQ                        EthernetType = 0x88a8
 	EthernetTypeLinkLayerDiscovery          EthernetType = 0x88cc
 	EthernetTypeEthernetCTP                 EthernetType = 0x9000
+)
+
+// Slow protocol is an enumeration of Slow Protocol
+// Subtypes 802.3 2007 Annex 57A
+type SlowProtocolType byte
+
+const (
+	SlowProtocolTypeUnused SlowProtocolType = 0
+	// 802.1ax-2014
+	SlowProtocolTypeLACP SlowProtocolType = 1
+	SlowProtocolTypeLAMP SlowProtocolType = 2
+	// 802.3ah
+	SlowProtocolTypeOAM       SlowProtocolType = 3
+	SlowProtocolTypeReserved1 SlowProtocolType = 4
+	SlowProtocolTypeReserved2 SlowProtocolType = 5
+	SlowProtocolTypeReserved3 SlowProtocolType = 6
+	SlowProtocolTypeReserved4 SlowProtocolType = 7
+	SlowProtocolTypeReserved5 SlowProtocolType = 8
+	SlowProtocolTypeReserved6 SlowProtocolType = 9
+	// 802.3 Annex 57B
+	SlowProtocolTypeOSSP SlowProtocolType = 10
 )
 
 // IPProtocol is an enumeration of IP protocol values, and acts as a decoder
@@ -284,6 +306,7 @@ var (
 	ProtocolFamilyMetadata   [256]EnumMetadata
 	Dot11TypeMetadata        [256]EnumMetadata
 	USBTypeMetadata          [256]EnumMetadata
+	SlowProtocolTypeMetadata [256]EnumMetadata
 )
 
 func (a EthernetType) Decode(data []byte, p gopacket.PacketBuilder) error {
@@ -294,6 +317,15 @@ func (a EthernetType) String() string {
 }
 func (a EthernetType) LayerType() gopacket.LayerType {
 	return EthernetTypeMetadata[a].LayerType
+}
+func (a SlowProtocolType) Decode(data []byte, p gopacket.PacketBuilder) error {
+	return SlowProtocolTypeMetadata[a].DecodeWith.Decode(data, p)
+}
+func (a SlowProtocolType) String() string {
+	return SlowProtocolTypeMetadata[a].Name
+}
+func (a SlowProtocolType) LayerType() gopacket.LayerType {
+	return SlowProtocolTypeMetadata[a].LayerType
 }
 func (a IPProtocol) Decode(data []byte, p gopacket.PacketBuilder) error {
 	return IPProtocolMetadata[a].DecodeWith.Decode(data, p)
@@ -437,6 +469,7 @@ func init() {
 	EthernetTypeMetadata[EthernetTypeEAPOL] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeEAPOL), Name: "EAPOL", LayerType: LayerTypeEAPOL}
 	EthernetTypeMetadata[EthernetTypeQinQ] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeDot1Q), Name: "Dot1Q", LayerType: LayerTypeDot1Q}
 	EthernetTypeMetadata[EthernetTypeTransparentEthernetBridging] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeEthernet), Name: "TransparentEthernetBridging", LayerType: LayerTypeEthernet}
+	EthernetTypeMetadata[EthernetTypeSlowProtocol] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeSlowProtocol), Name: "SlowProtocol", LayerType: LayerTypeSlowProtocol}
 
 	IPProtocolMetadata[IPProtocolIPv4] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeIPv4), Name: "IPv4", LayerType: LayerTypeIPv4}
 	IPProtocolMetadata[IPProtocolTCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeTCP), Name: "TCP", LayerType: LayerTypeTCP}
@@ -545,4 +578,10 @@ func init() {
 	USBTypeMetadata[USBTransportTypeInterrupt] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeUSBInterrupt), Name: "Interrupt", LayerType: LayerTypeUSBInterrupt}
 	USBTypeMetadata[USBTransportTypeControl] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeUSBControl), Name: "Control", LayerType: LayerTypeUSBControl}
 	USBTypeMetadata[USBTransportTypeBulk] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeUSBBulk), Name: "Bulk", LayerType: LayerTypeUSBBulk}
+
+	SlowProtocolTypeMetadata[SlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeLACP), Name: "LACP", LayerType: LayerTypeLACP}
+	//SlowProtocolTypeMetadata[SlowProtocolTypeLAMP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeLAMP), Name: "LAMP", LayerType: LayerTypeLAMP}
+	// TODO part of slow protocol but not implemented
+	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOAM), Name: "LACP", LayerType: LayerTypeOAM}
+	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOSSP), Name: "LACP", LayerType: LayerTypeOSSP}
 }

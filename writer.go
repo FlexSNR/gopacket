@@ -6,7 +6,9 @@
 
 package gopacket
 
-import ()
+import (
+	"fmt"
+)
 
 // SerializableLayer allows its implementations to be written out as a set of bytes,
 // so those bytes may be sent on the wire or otherwise used by the caller.
@@ -189,6 +191,7 @@ func SerializeLayers(w SerializeBuffer, opts SerializeOptions, layers ...Seriali
 		layer := layers[i]
 		err := layer.SerializeTo(w, opts)
 		if err != nil {
+			fmt.Println("ERROR serializing buffer", i, layer)
 			return err
 		}
 	}
