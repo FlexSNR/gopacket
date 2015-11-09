@@ -117,6 +117,11 @@ var (
 	LayerTypeLinuxSLL                    = gopacket.RegisterLayerType(113, gopacket.LayerTypeMetadata{"Linux SLL", gopacket.DecodeFunc(decodeLinuxSLL)})
 	LayerTypeSFlow                       = gopacket.RegisterLayerType(114, gopacket.LayerTypeMetadata{"SFlow", gopacket.DecodeFunc(decodeSFlow)})
 	LayerTypePrismHeader                 = gopacket.RegisterLayerType(115, gopacket.LayerTypeMetadata{"Prism monitor mode header", gopacket.DecodeFunc(decodePrismHeader)})
+	LayerTypeSlowProtocol                = gopacket.RegisterLayerType(116, gopacket.LayerTypeMetadata{"Slow Protocol", gopacket.DecodeFunc(decodeSlowProtocol)})
+	LayerTypeLACP                        = gopacket.RegisterLayerType(117, gopacket.LayerTypeMetadata{"LACP", gopacket.DecodeFunc(decodeLACP)})
+	//LayerTypeLAMP                        = gopacket.RegisterLayerType(118, gopacket.LayerTypeMetadata{"LAMP", gopacket.DecodeFunc(decodeSlowProtocolLAMP)})
+	//LayerTypeSlowProtocolOAM             = gopacket.RegisterLayerType(119, gopacket.LayerTypeMetadata{"OAM", gopacket.DecodeFunc(decodeSlowProtocolOAM)})
+	//LayerTypeSlowProtocolOSSP            = gopacket.RegisterLayerType(120, gopacket.LayerTypeMetadata{"OSSP", gopacket.DecodeFunc(decodeSlowProtocolOSSP)})
 )
 
 var (
