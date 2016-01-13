@@ -26,7 +26,7 @@ const (
 	LACPVersion2 LACPVersionType = 2
 )
 const (
-	LACPTLVEND                            LACPTLVType = 0
+	LACPTLVTerminator                     LACPTLVType = 0
 	LACPTLVActorInfo                      LACPTLVType = 1
 	LACPTLVPartnerInfo                    LACPTLVType = 2
 	LACPTLVCollectorInfo                  LACPTLVType = 3
@@ -39,7 +39,7 @@ const (
 	LACPTLVPortConversationServiceMapping LACPTLVType = 10
 )
 
-// LinkLayerDiscoveryValue is a TLV value inside a LACPPDU packet layer.
+// LACPValue is a TLV value inside a LACPPDU packet layer.
 type LACPValue struct {
 	TlvType LACPTLVType
 	Length  uint8
@@ -180,7 +180,7 @@ func decodeLACP(data []byte, p gopacket.PacketBuilder) error {
 			val.Value = vData[2:val.Length]
 		}
 		vals = append(vals, val)
-		if val.TlvType == LACPTLVEND {
+		if val.TlvType == LACPTLVTerminator {
 			break
 		}
 		if len(vData) < int(val.Length) {
@@ -195,7 +195,7 @@ func decodeLACP(data []byte, p gopacket.PacketBuilder) error {
 	pktEnd := false
 	for _, v := range vals {
 		switch v.TlvType {
-		case LACPTLVEND:
+		case LACPTLVTerminator:
 			pktEnd = true
 		case LACPTLVActorInfo:
 			lacp.Actor = LACPInfoTlv{TlvType: v.TlvType,
@@ -263,7 +263,7 @@ func decodeLACP(data []byte, p gopacket.PacketBuilder) error {
 
 	if lacp.Actor.TlvType == 0 || lacp.Partner.TlvType == 0 || lacp.Collector.TlvType == 0 ||
 		!pktEnd {
-		return fmt.Errorf("Missing mandatory LinkLayerDiscovery TLV")
+		return fmt.Errorf("Missing mandatory LACP TLV")
 	}
 	p.AddLayer(lacp)
 	//fmt.Println("decodeLACP exit")
@@ -322,8 +322,8 @@ func (l *LACP) CanDecode() gopacket.LayerClass {
 
 func (t LACPTLVType) String() (s string) {
 	switch t {
-	case LACPTLVEND:
-		s = "TLV End"
+	case LACPTLVTerminator:
+		s = "TLV Terminator"
 	case LACPTLVActorInfo:
 		s = "Actor Info"
 	case LACPTLVPartnerInfo:
@@ -346,13 +346,6 @@ func (t LACPTLVType) String() (s string) {
 		s = "Port Coversation Service Mapping"
 	default:
 		s = "Unknown"
-	}
-	return
-}
-
-func checkLACPTLVLen(v LinkLayerDiscoveryValue, l int) (err error) {
-	if len(v.Value) < l {
-		err = fmt.Errorf("Invalid TLV %v length %d (wanted mimimum %v", v.Type, len(v.Value), l)
 	}
 	return
 }

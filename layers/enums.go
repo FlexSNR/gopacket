@@ -580,7 +580,7 @@ func init() {
 	USBTypeMetadata[USBTransportTypeBulk] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeUSBBulk), Name: "Bulk", LayerType: LayerTypeUSBBulk}
 
 	SlowProtocolTypeMetadata[SlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeLACP), Name: "LACP", LayerType: LayerTypeLACP}
-	//SlowProtocolTypeMetadata[SlowProtocolTypeLAMP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeLAMP), Name: "LAMP", LayerType: LayerTypeLAMP}
+	SlowProtocolTypeMetadata[SlowProtocolTypeLAMP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeLAMP), Name: "LAMP", LayerType: LayerTypeLAMP}
 	// TODO part of slow protocol but not implemented
 	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOAM), Name: "LACP", LayerType: LayerTypeOAM}
 	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOSSP), Name: "LACP", LayerType: LayerTypeOSSP}
