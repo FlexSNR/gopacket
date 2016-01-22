@@ -59,6 +59,8 @@ func decodeLLC(data []byte, p gopacket.PacketBuilder) error {
 	p.AddLayer(l)
 	if l.DSAP == 0xAA && l.SSAP == 0xAA {
 		return p.NextDecoder(LayerTypeSNAP)
+	} else if l.DSAP == 0x42 && l.SSAP == 0x42 && l.Control == 0x03 {
+		return p.NextDecoder(LayerTypeBPDU)
 	}
 	return p.NextDecoder(gopacket.DecodeUnknown)
 }
@@ -70,6 +72,12 @@ func decodeSNAP(data []byte, p gopacket.PacketBuilder) error {
 		BaseLayer:          BaseLayer{data[:5], data[5:]},
 	}
 	p.AddLayer(s)
+	if s.OrganizationalCode[0] == 0x00 &&
+		s.OrganizationalCode[1] == 0x00 &&
+		s.OrganizationalCode[2] == 0xC &&
+		s.Type == 0x010B {
+		return p.NextDecoder(LayerTypePVST)
+	}
 	// BUG(gconnell):  When decoding SNAP, we treat the SNAP type as an Ethernet
 	// type.  This may not actually be an ethernet type in all cases,
 	// depending on the organizational code.  Right now, we don't check.

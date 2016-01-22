@@ -122,6 +122,8 @@ var (
 	LayerTypeLAMP                        = gopacket.RegisterLayerType(118, gopacket.LayerTypeMetadata{"LAMP", gopacket.DecodeFunc(decodeLAMP)})
 	//LayerTypeSlowProtocolOAM             = gopacket.RegisterLayerType(119, gopacket.LayerTypeMetadata{"OAM", gopacket.DecodeFunc(decodeSlowProtocolOAM)})
 	//LayerTypeSlowProtocolOSSP            = gopacket.RegisterLayerType(120, gopacket.LayerTypeMetadata{"OSSP", gopacket.DecodeFunc(decodeSlowProtocolOSSP)})
+	LayerTypeBPDU = gopacket.RegisterLayerType(118, gopacket.LayerTypeMetadata{"STP", gopacket.DecodeFunc(decodeBPDU)})
+	LayerTypePVST = gopacket.RegisterLayerType(118, gopacket.LayerTypeMetadata{"PVST", gopacket.DecodeFunc(decodePVST)})
 )
 
 var (
