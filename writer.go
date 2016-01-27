@@ -191,7 +191,7 @@ func SerializeLayers(w SerializeBuffer, opts SerializeOptions, layers ...Seriali
 		layer := layers[i]
 		err := layer.SerializeTo(w, opts)
 		if err != nil {
-			fmt.Println("ERROR serializing buffer", i, layer)
+			fmt.Println("ERROR serializing buffer", i, layer, err)
 			return err
 		}
 	}

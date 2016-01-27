@@ -10,11 +10,13 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/google/gopacket"
+	"net"
 )
 
 const RSTPProtocolIdentifier uint16 = 0x00
 
 const STPProtocolVersion uint8 = 0x00
+const TCNProtocolVersion uint8 = 0x01
 const RSTPProtocolVersion uint8 = 0x02
 const PVSTProtocolVersion uint8 = 0x02
 
@@ -27,6 +29,19 @@ const STPProtocolLength int = 35
 const RSTPProtocolLength int = 36
 const PVSTProtocolLength int = 41
 const BPDUTopologyLength int = 4
+
+var BpduDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x00}
+
+const (
+	// 9.3.1/3 bit encodings for octet 5
+	TopoChangeFlag    = 0x01
+	ProposalFlag      = 0x02
+	PortRoleFlag      = 0x06
+	LearningFlag      = 0x10
+	ForwardingFlag    = 0x20
+	AgreementFlag     = 0x40
+	TopoChangeAckFlag = 0x80
+)
 
 type STPOriginatingVlanTlv struct {
 	Type     uint8
