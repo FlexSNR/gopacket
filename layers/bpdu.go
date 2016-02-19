@@ -57,7 +57,7 @@ type STP struct {
 	BPDUType          byte
 	Flags             byte
 	RootId            [8]byte
-	RootCostPath      uint32
+	RootPathCost      uint32
 	BridgeId          [8]byte
 	PortId            uint16
 	MsgAge            uint16
@@ -74,7 +74,7 @@ type RSTP struct {
 	BPDUType          byte
 	Flags             byte
 	RootId            [8]byte
-	RootCostPath      uint32
+	RootPathCost      uint32
 	BridgeId          [8]byte
 	PortId            uint16
 	MsgAge            uint16
@@ -92,7 +92,7 @@ type PVST struct {
 	BPDUType          byte
 	Flags             byte
 	RootId            [8]byte
-	RootCostPath      uint32
+	RootPathCost      uint32
 	BridgeId          [8]byte
 	PortId            uint16
 	MsgAge            uint16
@@ -145,7 +145,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 			pdu.Flags = data[4]
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
-			pdu.RootCostPath = binary.BigEndian.Uint32(data[13:17])
+			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
 			pdu.BridgeId = [8]uint8{data[17], data[18], data[19], data[20],
 				data[21], data[22], data[23], data[24]}
 			pdu.PortId = binary.BigEndian.Uint16(data[25:27])
@@ -164,7 +164,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 			pdu.Flags = data[4]
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
-			pdu.RootCostPath = binary.BigEndian.Uint32(data[13:17])
+			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
 			pdu.BridgeId = [8]uint8{data[17], data[18], data[19], data[20],
 				data[21], data[22], data[23], data[24]}
 			pdu.PortId = binary.BigEndian.Uint16(data[25:27])
@@ -206,7 +206,7 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 			pdu.Flags = data[4]
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
-			pdu.RootCostPath = binary.BigEndian.Uint32(data[13:17])
+			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
 			pdu.BridgeId = [8]uint8{data[17], data[18], data[19], data[20],
 				data[21], data[22], data[23], data[24]}
 			pdu.PortId = binary.BigEndian.Uint16(data[25:27])
@@ -218,6 +218,8 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 			pdu.OriginatingVlan.Type = data[36]
 			pdu.OriginatingVlan.Length = binary.BigEndian.Uint16(data[37:39])
 			pdu.OriginatingVlan.OrigVlan = binary.BigEndian.Uint16(data[39:41])
+
+			p.AddLayer(pdu)
 		} else {
 			return fmt.Errorf("Error unknown PVST BPDU type")
 		}
@@ -252,7 +254,7 @@ func (l *STP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOpt
 	bytes[10] = byte(l.RootId[5])
 	bytes[11] = byte(l.RootId[6])
 	bytes[12] = byte(l.RootId[7])
-	binary.BigEndian.PutUint32(bytes[13:], l.RootCostPath)
+	binary.BigEndian.PutUint32(bytes[13:], l.RootPathCost)
 	bytes[17] = byte(l.BridgeId[0])
 	bytes[18] = byte(l.BridgeId[1])
 	bytes[19] = byte(l.BridgeId[2])
@@ -292,7 +294,7 @@ func (l *RSTP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOp
 	bytes[10] = byte(l.RootId[5])
 	bytes[11] = byte(l.RootId[6])
 	bytes[12] = byte(l.RootId[7])
-	binary.BigEndian.PutUint32(bytes[13:], l.RootCostPath)
+	binary.BigEndian.PutUint32(bytes[13:], l.RootPathCost)
 	bytes[17] = byte(l.BridgeId[0])
 	bytes[18] = byte(l.BridgeId[1])
 	bytes[19] = byte(l.BridgeId[2])
@@ -332,7 +334,7 @@ func (l *PVST) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOp
 	bytes[10] = byte(l.RootId[5])
 	bytes[11] = byte(l.RootId[6])
 	bytes[12] = byte(l.RootId[7])
-	binary.BigEndian.PutUint32(bytes[13:], l.RootCostPath)
+	binary.BigEndian.PutUint32(bytes[13:], l.RootPathCost)
 	bytes[17] = byte(l.BridgeId[0])
 	bytes[18] = byte(l.BridgeId[1])
 	bytes[19] = byte(l.BridgeId[2])
