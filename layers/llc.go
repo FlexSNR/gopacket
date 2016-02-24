@@ -80,7 +80,8 @@ func decodeSNAP(data []byte, p gopacket.PacketBuilder) error {
 	if s.OrganizationalCode[0] == 0x00 &&
 		s.OrganizationalCode[1] == 0x00 &&
 		s.OrganizationalCode[2] == 0xC &&
-		s.Type == 0x010B {
+		s.OrganizationalCode[3] == 0x01 &&
+		s.OrganizationalCode[4] == 0x0B {
 		return p.NextDecoder(LayerTypePVST)
 	}
 	// BUG(gconnell):  When decoding SNAP, we treat the SNAP type as an Ethernet
@@ -108,5 +109,24 @@ func (l *LLC) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOpt
 	bytes[0] = l.DSAP | bitIG
 	bytes[1] = l.SSAP | bitCR
 	bytes[2] = l.Control
+	return nil
+}
+
+func (l *SNAP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
+	snaplen := len(l.OrganizationalCode)
+	if l.Type != 0 {
+		snaplen += 2
+	}
+	bytes, err := b.PrependBytes(snaplen)
+	if err != nil {
+		fmt.Println("Error in Serialilze to for SNAP")
+		return err
+	}
+
+	bytes = l.OrganizationalCode
+	if l.Type != 0 {
+		binary.BigEndian.PutUint16(bytes[snaplen-2:], uint16(l.Type))
+	}
+
 	return nil
 }

@@ -31,6 +31,7 @@ const PVSTProtocolLength int = 41
 const BPDUTopologyLength int = 4
 
 var BpduDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x00}
+var BpduPVSTDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x00, 0x0C, 0xCC, 0xCC, 0xCD}
 
 const (
 	// 9.3.1/3 bit encodings for octet 5
