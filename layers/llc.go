@@ -122,7 +122,9 @@ func (l *SNAP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOp
 		return err
 	}
 
-	bytes = l.OrganizationalCode
+	bytes[0] = l.OrganizationalCode[0]
+	bytes[1] = l.OrganizationalCode[1]
+	bytes[2] = l.OrganizationalCode[2]
 	if l.Type != 0 {
 		binary.BigEndian.PutUint16(bytes[snaplen-2:], uint16(l.Type))
 	}
