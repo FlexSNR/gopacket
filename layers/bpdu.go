@@ -199,7 +199,8 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 	bpdutype := data[3]
 
 	if protocolversion == bpdutype {
-		if bpdutype == BPDUTypeRSTP {
+		if bpdutype == BPDUTypeRSTP ||
+			bpdutype == BPDUTypeSTP {
 			pdu := &PVST{BaseLayer: BaseLayer{Contents: data}}
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
