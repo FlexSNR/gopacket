@@ -80,8 +80,7 @@ func decodeSNAP(data []byte, p gopacket.PacketBuilder) error {
 	if s.OrganizationalCode[0] == 0x00 &&
 		s.OrganizationalCode[1] == 0x00 &&
 		s.OrganizationalCode[2] == 0xC &&
-		s.OrganizationalCode[3] == 0x01 &&
-		s.OrganizationalCode[4] == 0x0B {
+		s.Type == 0x010B {
 		return p.NextDecoder(LayerTypePVST)
 	}
 	// BUG(gconnell):  When decoding SNAP, we treat the SNAP type as an Ethernet
