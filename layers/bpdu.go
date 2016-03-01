@@ -27,7 +27,7 @@ const BPDUTypeTopoChange uint8 = 0x80
 
 const STPProtocolLength int = 35
 const RSTPProtocolLength int = 36
-const PVSTProtocolLength int = 41
+const PVSTProtocolLength int = 42
 const BPDUTopologyLength int = 4
 
 var BpduDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x00}
@@ -45,7 +45,7 @@ const (
 )
 
 type STPOriginatingVlanTlv struct {
-	Type     uint8
+	Type     uint16
 	Length   uint16
 	OrigVlan uint16
 }
@@ -199,7 +199,8 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 	bpdutype := data[3]
 
 	if protocolversion == bpdutype {
-		if bpdutype == BPDUTypeRSTP {
+		if bpdutype == BPDUTypeRSTP ||
+			bpdutype == BPDUTypeSTP {
 			pdu := &PVST{BaseLayer: BaseLayer{Contents: data}}
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
@@ -216,9 +217,9 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 			pdu.HelloTime = binary.BigEndian.Uint16(data[31:33])
 			pdu.FwdDelay = binary.BigEndian.Uint16(data[33:35])
 			pdu.Version1Length = data[35]
-			pdu.OriginatingVlan.Type = data[36]
-			pdu.OriginatingVlan.Length = binary.BigEndian.Uint16(data[37:39])
-			pdu.OriginatingVlan.OrigVlan = binary.BigEndian.Uint16(data[39:41])
+			pdu.OriginatingVlan.Type = binary.BigEndian.Uint16(data[36:38])
+			pdu.OriginatingVlan.Length = binary.BigEndian.Uint16(data[38:40])
+			pdu.OriginatingVlan.OrigVlan = binary.BigEndian.Uint16(data[40:42])
 
 			p.AddLayer(pdu)
 		} else {
@@ -350,9 +351,9 @@ func (l *PVST) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOp
 	binary.BigEndian.PutUint16(bytes[31:], l.HelloTime)
 	binary.BigEndian.PutUint16(bytes[33:], l.FwdDelay)
 	bytes[35] = l.Version1Length
-	bytes[36] = l.OriginatingVlan.Type
-	binary.BigEndian.PutUint16(bytes[37:], l.OriginatingVlan.Length)
-	binary.BigEndian.PutUint16(bytes[39:], l.OriginatingVlan.OrigVlan)
+	binary.BigEndian.PutUint16(bytes[36:], l.OriginatingVlan.Type)
+	binary.BigEndian.PutUint16(bytes[38:], l.OriginatingVlan.Length)
+	binary.BigEndian.PutUint16(bytes[40:], l.OriginatingVlan.OrigVlan)
 	return nil
 }
 

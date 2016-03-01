@@ -20,6 +20,12 @@ type Dot1Q struct {
 	DropEligible   bool
 	VLANIdentifier uint16
 	Type           EthernetType
+	// Length is only set if a length field exists within this header.  Ethernet
+	// headers follow two different standards, one that uses an EthernetType, the
+	// other which defines a length the follows with a LLC header (802.3).  If the
+	// former is the case, we set EthernetType and Length stays 0.  In the latter
+	// case, we set Length and EthernetType = EthernetTypeLLC.
+	Length uint16
 }
 
 // LayerType returns gopacket.LayerTypeDot1Q
@@ -31,6 +37,11 @@ func (d *Dot1Q) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
 	d.DropEligible = data[0]&0x10 != 0
 	d.VLANIdentifier = binary.BigEndian.Uint16(data[:2]) & 0x0FFF
 	d.Type = EthernetType(binary.BigEndian.Uint16(data[2:4]))
+
+	if d.Type < 0x0600 {
+		d.Length = uint16(d.Type)
+		d.Type = EthernetTypeLLC
+	}
 	d.BaseLayer = BaseLayer{Contents: data[:4], Payload: data[4:]}
 	return nil
 }
