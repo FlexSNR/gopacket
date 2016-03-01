@@ -20,10 +20,10 @@ const TCNProtocolVersion uint8 = 0x01
 const RSTPProtocolVersion uint8 = 0x02
 const PVSTProtocolVersion uint8 = 0x02
 
-const BPDUTypeSTP uint8 = 0x00
-const BPDUTypeRSTP uint8 = 0x02
-const BPDUTypePVST uint8 = 0x02
-const BPDUTypeTopoChange uint8 = 0x80
+const BPDUTypeSTP StpBpduType = 0x00
+const BPDUTypeRSTP StpBpduType = 0x02
+const BPDUTypePVST StpBpduType = 0x02
+const BPDUTypeTopoChange StpBpduType = 0x80
 
 const STPProtocolLength int = 35
 const RSTPProtocolLength int = 36
@@ -43,6 +43,7 @@ const (
 	RoleDisabledPort   byte = 6
 )
 
+type StpBpduType uint8
 type StpFlags byte
 
 const (
@@ -67,7 +68,7 @@ type STP struct {
 	BaseLayer
 	ProtocolId        uint16
 	ProtocolVersionId byte
-	BPDUType          byte
+	BPDUType          StpBpduType
 	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
@@ -84,7 +85,7 @@ type RSTP struct {
 	BaseLayer
 	ProtocolId        uint16
 	ProtocolVersionId byte
-	BPDUType          byte
+	BPDUType          StpBpduType
 	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
@@ -102,7 +103,7 @@ type PVST struct {
 	BaseLayer
 	ProtocolId        uint16
 	ProtocolVersionId byte
-	BPDUType          byte
+	BPDUType          StpBpduType
 	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
@@ -121,7 +122,7 @@ type BPDUTopology struct {
 	BaseLayer
 	ProtocolId        uint16
 	ProtocolVersionId byte
-	BPDUType          byte
+	BPDUType          StpBpduType
 }
 
 // LayerType returns LayerTypeSTP
@@ -145,16 +146,16 @@ func (l *BPDUTopology) LayerType() gopacket.LayerType {
 func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 
 	protocolversion := data[2]
-	bpdutype := data[3]
+	bpdutype := StpBpduType(data[3])
 
 	// STP is 35 bytes
 	// RSTP is 36 bytes
-	if protocolversion == bpdutype {
+	if protocolversion == uint8(bpdutype) {
 		if bpdutype == BPDUTypeSTP {
 			pdu := &STP{BaseLayer: BaseLayer{Contents: data}}
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
-			pdu.BPDUType = data[3]
+			pdu.BPDUType = StpBpduType(data[3])
 			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
@@ -173,7 +174,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 			pdu := &RSTP{BaseLayer: BaseLayer{Contents: data}}
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
-			pdu.BPDUType = data[3]
+			pdu.BPDUType = StpBpduType(data[3])
 			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
@@ -193,7 +194,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 		pdu := &BPDUTopology{BaseLayer: BaseLayer{Contents: data}}
 		pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 		pdu.ProtocolVersionId = data[2]
-		pdu.BPDUType = data[3]
+		pdu.BPDUType = StpBpduType(data[3])
 
 		p.AddLayer(pdu)
 	} else {
@@ -208,15 +209,15 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 
 	protocolversion := data[2]
-	bpdutype := data[3]
+	bpdutype := StpBpduType(data[3])
 
-	if protocolversion == bpdutype {
+	if protocolversion == uint8(bpdutype) {
 		if bpdutype == BPDUTypeRSTP ||
 			bpdutype == BPDUTypeSTP {
 			pdu := &PVST{BaseLayer: BaseLayer{Contents: data}}
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
-			pdu.BPDUType = data[3]
+			pdu.BPDUType = StpBpduType(data[3])
 			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
@@ -438,6 +439,19 @@ func (f StpFlags) String() (str string) {
 		str += "Backup Port"
 	case RoleDisabledPort:
 		str += "Disabled Port"
+	}
+	return
+}
+
+func (t StpBpduType) String() (str string) {
+
+	switch t {
+	case BPDUTypeSTP:
+		str += "STP"
+	case BPDUTypeRSTP: //BPDUTypePVST
+		str += "RSTP"
+	case BPDUTypeTopoChange:
+		str += "TCN"
 	}
 	return
 }
