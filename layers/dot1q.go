@@ -31,6 +31,10 @@ func (d *Dot1Q) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
 	d.DropEligible = data[0]&0x10 != 0
 	d.VLANIdentifier = binary.BigEndian.Uint16(data[:2]) & 0x0FFF
 	d.Type = EthernetType(binary.BigEndian.Uint16(data[2:4]))
+
+	if d.Type < 0x0600 {
+		d.Type = EthernetTypeLLC
+	}
 	d.BaseLayer = BaseLayer{Contents: data[:4], Payload: data[4:]}
 	return nil
 }
