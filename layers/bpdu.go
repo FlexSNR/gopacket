@@ -34,14 +34,26 @@ var BpduDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0
 var BpduPVSTDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x00, 0x0C, 0xCC, 0xCC, 0xCD}
 
 const (
+	RoleInvalid        byte = 0
+	RoleBridgePort     byte = 1
+	RoleRootPort       byte = 2
+	RoleDesignatedPort byte = 3
+	RoleAlternatePort  byte = 4
+	RoleBackupPort     byte = 5
+	RoleDisabledPort   byte = 6
+)
+
+type StpFlags byte
+
+const (
 	// 9.3.1/3 bit encodings for octet 5
-	TopoChangeFlag    = 0x01
-	ProposalFlag      = 0x02
-	PortRoleFlag      = 0x06
-	LearningFlag      = 0x10
-	ForwardingFlag    = 0x20
-	AgreementFlag     = 0x40
-	TopoChangeAckFlag = 0x80
+	TopoChangeFlag    StpFlags = 0x01
+	ProposalFlag      StpFlags = 0x02
+	PortRoleFlag      StpFlags = 0x06
+	LearningFlag      StpFlags = 0x10
+	ForwardingFlag    StpFlags = 0x20
+	AgreementFlag     StpFlags = 0x40
+	TopoChangeAckFlag StpFlags = 0x80
 )
 
 type STPOriginatingVlanTlv struct {
@@ -56,7 +68,7 @@ type STP struct {
 	ProtocolId        uint16
 	ProtocolVersionId byte
 	BPDUType          byte
-	Flags             byte
+	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
 	BridgeId          [8]byte
@@ -73,7 +85,7 @@ type RSTP struct {
 	ProtocolId        uint16
 	ProtocolVersionId byte
 	BPDUType          byte
-	Flags             byte
+	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
 	BridgeId          [8]byte
@@ -91,7 +103,7 @@ type PVST struct {
 	ProtocolId        uint16
 	ProtocolVersionId byte
 	BPDUType          byte
-	Flags             byte
+	Flags             StpFlags
 	RootId            [8]byte
 	RootPathCost      uint32
 	BridgeId          [8]byte
@@ -143,7 +155,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
 			pdu.BPDUType = data[3]
-			pdu.Flags = data[4]
+			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
 			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
@@ -162,7 +174,7 @@ func decodeBPDU(data []byte, p gopacket.PacketBuilder) error {
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
 			pdu.BPDUType = data[3]
-			pdu.Flags = data[4]
+			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
 			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
@@ -205,7 +217,7 @@ func decodePVST(data []byte, p gopacket.PacketBuilder) error {
 			pdu.ProtocolId = binary.BigEndian.Uint16(data[0:2])
 			pdu.ProtocolVersionId = data[2]
 			pdu.BPDUType = data[3]
-			pdu.Flags = data[4]
+			pdu.Flags = StpFlags(data[4])
 			pdu.RootId = [8]uint8{data[5], data[6], data[7], data[8],
 				data[9], data[10], data[11], data[12]}
 			pdu.RootPathCost = binary.BigEndian.Uint32(data[13:17])
@@ -386,4 +398,46 @@ func (l *PVST) CanDecode() gopacket.LayerClass {
 
 func (l *BPDUTopology) CanDecode() gopacket.LayerClass {
 	return LayerTypeBPDU
+}
+
+func (f StpFlags) String() (str string) {
+
+	if f&TopoChangeFlag != 0 {
+		str += "Topology Change "
+	}
+	if f&ProposalFlag != 0 {
+		str += "Proposal "
+	}
+	if f&LearningFlag != 0 {
+		str += "Learning "
+	}
+	if f&ForwardingFlag != 0 {
+		str += "Forwarding "
+	}
+	if f&AgreementFlag != 0 {
+		str += "Agreement "
+	}
+	if f&TopoChangeAckFlag != 0 {
+		str += "Topology Change Ack "
+	}
+
+	role := byte((f & PortRoleFlag) >> 2 & 0x3)
+	str += "Role: "
+	switch role {
+	case RoleInvalid:
+		str += "Unknown"
+	case RoleBridgePort:
+		str += "Bridge Port"
+	case RoleRootPort:
+		str += "Root Port"
+	case RoleDesignatedPort:
+		str += "Designated Port"
+	case RoleAlternatePort:
+		str += "Alternate Port"
+	case RoleBackupPort:
+		str += "Backup Port"
+	case RoleDisabledPort:
+		str += "Disabled Port"
+	}
+	return
 }
