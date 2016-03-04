@@ -34,13 +34,10 @@ var BpduDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0
 var BpduPVSTDMAC net.HardwareAddr = net.HardwareAddr{0x01, 0x00, 0x0C, 0xCC, 0xCC, 0xCD}
 
 const (
-	RoleInvalid        byte = 0
-	RoleBridgePort     byte = 1
-	RoleRootPort       byte = 2
-	RoleDesignatedPort byte = 3
-	RoleAlternatePort  byte = 4
-	RoleBackupPort     byte = 5
-	RoleDisabledPort   byte = 6
+	RoleMasterPort          byte = 0
+	RoleAlternateBackupPort byte = 1
+	RoleRootPort            byte = 2
+	RoleDesignatedPort      byte = 3
 )
 
 type StpBpduType uint8
@@ -425,21 +422,14 @@ func (f StpFlags) String() (str string) {
 	role := byte((f & PortRoleFlag) >> 2 & 0x3)
 	str += "Role: "
 	switch role {
-	case RoleInvalid:
-		str += "Unknown"
-	case RoleBridgePort:
-		str += "Bridge Port"
 	case RoleRootPort:
 		str += "Root Port"
 	case RoleDesignatedPort:
 		str += "Designated Port"
-	case RoleAlternatePort:
-		str += "Alternate Port"
-	case RoleBackupPort:
-		str += "Backup Port"
-	case RoleDisabledPort:
-		str += "Disabled Port"
-	}
+	case RoleAlternateBackupPort:
+		str += "Alternate/Backup Port"
+	default:
+		str += "Unknown"
 	return
 }
 
