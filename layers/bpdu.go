@@ -430,6 +430,7 @@ func (f StpFlags) String() (str string) {
 		str += "Alternate/Backup Port"
 	default:
 		str += "Unknown"
+	}
 	return
 }
 
