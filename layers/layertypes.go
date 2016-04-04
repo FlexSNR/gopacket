@@ -122,8 +122,9 @@ var (
 	LayerTypeLAMP                        = gopacket.RegisterLayerType(118, gopacket.LayerTypeMetadata{"LAMP", gopacket.DecodeFunc(decodeLAMP)})
 	//LayerTypeSlowProtocolOAM             = gopacket.RegisterLayerType(119, gopacket.LayerTypeMetadata{"OAM", gopacket.DecodeFunc(decodeSlowProtocolOAM)})
 	//LayerTypeSlowProtocolOSSP            = gopacket.RegisterLayerType(120, gopacket.LayerTypeMetadata{"OSSP", gopacket.DecodeFunc(decodeSlowProtocolOSSP)})
-	LayerTypeBPDU = gopacket.RegisterLayerType(121, gopacket.LayerTypeMetadata{"STP", gopacket.DecodeFunc(decodeBPDU)})
-	LayerTypePVST = gopacket.RegisterLayerType(122, gopacket.LayerTypeMetadata{"PVST", gopacket.DecodeFunc(decodePVST)})
+	LayerTypeBPDU  = gopacket.RegisterLayerType(121, gopacket.LayerTypeMetadata{"STP", gopacket.DecodeFunc(decodeBPDU)})
+	LayerTypePVST  = gopacket.RegisterLayerType(122, gopacket.LayerTypeMetadata{"PVST", gopacket.DecodeFunc(decodePVST)})
+	LayerTypeVxlan = gopacket.RegisterLayerType(123, gopacket.LayerTypeMetadata{"VXLAN", gopacket.DecodeFunc(decodeVxlan)})
 )
 
 var (
