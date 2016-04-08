@@ -273,6 +273,11 @@ const (
 // code associated with that packet.  If the packet is read successfully, the
 // returned error is nil.
 func (p *Handle) ReadPacketData() (data []byte, ci gopacket.CaptureInfo, err error) {
+	// Found that in some cases during delete operation if enough packets are
+	// transmitted simultanously the handle will be nil
+	if p == nil {
+		return data, ci, errors.New("Packet handler is Nil")
+	}
 	p.mu.Lock()
 	err = p.getNextBufPtrLocked(&ci)
 	if err == nil {
