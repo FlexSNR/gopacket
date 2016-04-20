@@ -130,6 +130,10 @@ func (v *VXLAN) CanDecode() gopacket.LayerClass {
 
 func (v *VXLAN) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
 
+	if len(data) < 8 {
+		return fmt.Errorf("Vxlan: length of vxlan packet invalid", len(data))
+	}
+
 	v.Flags = data[0]
 	if v.Flags != 0x08 {
 		return fmt.Errorf("Vxlan: Flags set incorrectly got 0x%x expect 0x80", v.Flags)
