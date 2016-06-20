@@ -102,10 +102,10 @@ func ExtendVxlanUdpPorts(udp UDPPort) {
 
 type VXLAN struct {
 	BaseLayer
-	Flags     uint8
-	Reserved1 [3]uint8
-	VNI       [3]uint8
-	Reserved2 uint8
+	Flags     byte
+	Reserved1 [3]byte
+	VNI       [3]byte
+	Reserved2 byte
 }
 
 // VNI is a 24 bit value lets add to byte fields approprately
@@ -129,6 +129,10 @@ func (v *VXLAN) CanDecode() gopacket.LayerClass {
 }
 
 func (v *VXLAN) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
+
+	if len(data) < 8 {
+		return fmt.Errorf("Vxlan: length of vxlan packet invalid", len(data))
+	}
 
 	v.Flags = data[0]
 	if v.Flags != 0x08 {
