@@ -12,7 +12,7 @@ import (
 	"github.com/google/gopacket"
 )
 
-// LLDPTLVType is the type of each TLV value in a LinkLayerDiscovery packet.
+// LAMPTLVType is the type of each TLV value in a Marker packet.
 type LAMPTLVType byte
 type LAMPVersionType byte
 
@@ -89,8 +89,8 @@ func decodeLAMP(data []byte, p gopacket.PacketBuilder) error {
 		}
 		vData = vData[val.Length:]
 	}
-	if len(vals) < 3 {
-		return fmt.Errorf("Missing mandatory LAMP TLV")
+	if len(vals) < 2 {
+		return fmt.Errorf("Missing mandatory LAMP TLV", vals)
 	}
 
 	pktEnd := false
