@@ -10,8 +10,9 @@ package layers
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/google/gopacket"
 	"math"
+
+	"github.com/google/gopacket"
 )
 
 /*
@@ -375,7 +376,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i++ {
 				drcp.HomeGatewayVector.Vector = append(drcp.HomeGatewayVector.Vector, v.Value[i])
 			}
 
@@ -392,7 +393,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i++ {
 				drcp.OtherGatewayVector.Vector = append(drcp.OtherGatewayVector.Vector, v.Value[i])
 			}
 
