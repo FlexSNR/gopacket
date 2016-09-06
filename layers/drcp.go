@@ -339,7 +339,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 				OperPartnerAggKey: binary.BigEndian.Uint16(v.Value[2:4]),
 			}
 			// lets add the ports
-			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i += 4 {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength(); i += 4 {
 				port := binary.BigEndian.Uint32(v.Value[i : i+4])
 				drcp.HomePortsInfo.ActiveHomePorts = append(drcp.HomePortsInfo.ActiveHomePorts, port)
 			}
@@ -351,7 +351,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 				OperPartnerAggKey: binary.BigEndian.Uint16(v.Value[2:4]),
 			}
 			// lets add the ports
-			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i += 4 {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength(); i += 4 {
 				port := binary.BigEndian.Uint32(v.Value[i : i+4])
 				drcp.NeighborPortsInfo.ActiveNeighborPorts = append(drcp.NeighborPortsInfo.ActiveNeighborPorts, port)
 			}
@@ -363,7 +363,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 				OperPartnerAggKey: binary.BigEndian.Uint16(v.Value[2:4]),
 			}
 			// lets add the ports
-			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i += 4 {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength(); i += 4 {
 				port := binary.BigEndian.Uint32(v.Value[i : i+4])
 				drcp.OtherPortsInfo.NeighborPorts = append(drcp.OtherPortsInfo.NeighborPorts, port)
 			}
@@ -376,7 +376,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.HomeGatewayVector.Vector = append(drcp.HomeGatewayVector.Vector, v.Value[i])
 			}
 
@@ -393,7 +393,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(4); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(4); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.OtherGatewayVector.Vector = append(drcp.OtherGatewayVector.Vector, v.Value[i])
 			}
 
@@ -403,7 +403,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.TwoPortalGatewayConversationVector.Vector = append(drcp.TwoPortalGatewayConversationVector.Vector, v.Value[i])
 
 			}
@@ -413,7 +413,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.ThreePortalGatewayConversationVector1.Vector = append(drcp.ThreePortalGatewayConversationVector1.Vector, v.Value[i])
 			}
 		case DRCPTLV3PGatewayConversationVector2:
@@ -422,7 +422,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.ThreePortalGatewayConversationVector1.Vector = append(drcp.ThreePortalGatewayConversationVector1.Vector, v.Value[i])
 			}
 		case DRCPTLV2PPortConversationVector:
@@ -431,7 +431,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.TwoPortalPortConversationVector.Vector = append(drcp.TwoPortalPortConversationVector.Vector, v.Value[i])
 			}
 
@@ -441,7 +441,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.ThreePortalPortConversationVector1.Vector = append(drcp.ThreePortalPortConversationVector1.Vector, v.Value[i])
 			}
 
@@ -451,7 +451,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 			}
 			// every byte contains the boolean value for 4 conversations
 			// conversations id's 0-4095
-			for i := uint16(0); i < v.TlvTypeLength.GetLength()-4; i++ {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i++ {
 				drcp.ThreePortalPortConversationVector2.Vector = append(drcp.ThreePortalPortConversationVector2.Vector, v.Value[i])
 			}
 
@@ -608,9 +608,8 @@ func (d *DRCP) serializeHomePortsInfo(b gopacket.SerializeBuffer) error {
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.HomePortsInfo.TlvTypeLength))
 	binary.BigEndian.PutUint16(bytes[2:], d.HomePortsInfo.AdminAggKey)
 	binary.BigEndian.PutUint16(bytes[4:], d.HomePortsInfo.OperPartnerAggKey)
-	for i, j := uint16(6), 0; i < d.HomePortsInfo.TlvTypeLength.GetLength()-4; i, j = i+4, j+1 {
+	for i, j := uint16(6), uint16(0); j < (d.HomePortsInfo.TlvTypeLength.GetLength()-4)/4; i, j = i+4, j+1 {
 		binary.BigEndian.PutUint32(bytes[i:], d.HomePortsInfo.ActiveHomePorts[j])
-		j += 1
 	}
 
 	return nil
@@ -635,7 +634,7 @@ func (d *DRCP) serializeNeighborPortsInfo(b gopacket.SerializeBuffer) error {
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.NeighborPortsInfo.TlvTypeLength))
 	binary.BigEndian.PutUint16(bytes[2:], d.NeighborPortsInfo.AdminAggKey)
 	binary.BigEndian.PutUint16(bytes[4:], d.NeighborPortsInfo.OperPartnerAggKey)
-	for i, j := uint16(6), 0; i < d.NeighborPortsInfo.TlvTypeLength.GetLength()-4; i, j = i+4, j+1 {
+	for i, j := uint16(6), uint16(0); j < (d.NeighborPortsInfo.TlvTypeLength.GetLength()-4)/4; i, j = i+4, j+1 {
 		binary.BigEndian.PutUint32(bytes[i:], d.NeighborPortsInfo.ActiveNeighborPorts[j])
 	}
 	return nil
@@ -665,7 +664,7 @@ func (d *DRCP) serializeOtherPortsInfo(b gopacket.SerializeBuffer) error {
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.OtherPortsInfo.TlvTypeLength))
 	binary.BigEndian.PutUint16(bytes[2:], d.OtherPortsInfo.AdminAggKey)
 	binary.BigEndian.PutUint16(bytes[4:], d.OtherPortsInfo.OperPartnerAggKey)
-	for i, j := uint16(6), 0; i < d.OtherPortsInfo.TlvTypeLength.GetLength()-4; i, j = i+4, j+1 {
+	for i, j := uint16(6), uint16(0); j < (d.OtherPortsInfo.TlvTypeLength.GetLength()-4)/4; i, j = i+4, j+1 {
 		binary.BigEndian.PutUint32(bytes[i:], d.OtherPortsInfo.NeighborPorts[j])
 	}
 
@@ -698,7 +697,7 @@ func (d *DRCP) serializeHomeGatewayVector(b gopacket.SerializeBuffer) error {
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.HomeGatewayVector.TlvTypeLength))
 	binary.BigEndian.PutUint32(bytes[2:], d.HomeGatewayVector.Sequence)
-	for i, j := uint16(6), 0; i < d.HomeGatewayVector.TlvTypeLength.GetLength()-4; i, j = i+1, j+1 {
+	for i, j := uint16(6), uint16(0); j < d.HomeGatewayVector.TlvTypeLength.GetLength()-4; i, j = i+1, j+1 {
 		bytes[i] = byte(d.HomeGatewayVector.Vector[j])
 	}
 
@@ -758,8 +757,8 @@ func (d *DRCP) serializeOtherGatewayVector(b gopacket.SerializeBuffer) error {
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.OtherGatewayVector.TlvTypeLength))
 	binary.BigEndian.PutUint32(bytes[2:], d.OtherGatewayVector.Sequence)
-	for i, j := uint16(6), 0; i < d.OtherGatewayVector.TlvTypeLength.GetLength()-4; i, j = i+1, j+1 {
-		bytes[i] = byte(d.OtherGatewayVector.Vector[i])
+	for i, j := uint16(6), uint16(0); j < d.OtherGatewayVector.TlvTypeLength.GetLength()-4; i, j = i+1, j+1 {
+		bytes[i] = byte(d.OtherGatewayVector.Vector[j])
 	}
 	return nil
 }
@@ -786,7 +785,7 @@ func (d *DRCP) serialize2PGatewayConversationVector(b gopacket.SerializeBuffer) 
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.TwoPortalGatewayConversationVector.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.TwoPortalGatewayConversationVector.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.TwoPortalGatewayConversationVector.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.TwoPortalGatewayConversationVector.Vector[j])
 	}
 
@@ -815,7 +814,7 @@ func (d *DRCP) serialize3PGatewayConversationVector1(b gopacket.SerializeBuffer)
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.ThreePortalGatewayConversationVector1.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.ThreePortalGatewayConversationVector1.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.ThreePortalGatewayConversationVector1.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.ThreePortalGatewayConversationVector1.Vector[j])
 	}
 
@@ -844,7 +843,7 @@ func (d *DRCP) serialize3PGatewayConversationVector2(b gopacket.SerializeBuffer)
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.ThreePortalGatewayConversationVector2.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.ThreePortalGatewayConversationVector2.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.ThreePortalGatewayConversationVector2.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.ThreePortalGatewayConversationVector2.Vector[j])
 	}
 
@@ -873,7 +872,7 @@ func (d *DRCP) serialize2PPortConversationVector(b gopacket.SerializeBuffer) err
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.TwoPortalPortConversationVector.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.TwoPortalPortConversationVector.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.TwoPortalPortConversationVector.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.TwoPortalPortConversationVector.Vector[j])
 	}
 
@@ -902,7 +901,7 @@ func (d *DRCP) serialize3PPortConversationVector1(b gopacket.SerializeBuffer) er
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.ThreePortalPortConversationVector1.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.ThreePortalPortConversationVector1.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.ThreePortalPortConversationVector1.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.ThreePortalPortConversationVector1.Vector[j])
 	}
 
@@ -931,7 +930,7 @@ func (d *DRCP) serialize3PPortConversationVector2(b gopacket.SerializeBuffer) er
 	}
 
 	binary.BigEndian.PutUint16(bytes[0:], uint16(d.ThreePortalPortConversationVector2.TlvTypeLength))
-	for i, j := uint16(2), 0; i < d.ThreePortalPortConversationVector2.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
+	for i, j := uint16(2), uint16(0); j < d.ThreePortalPortConversationVector2.TlvTypeLength.GetLength(); i, j = i+1, j+1 {
 		bytes[i] = byte(d.ThreePortalPortConversationVector2.Vector[j])
 	}
 
