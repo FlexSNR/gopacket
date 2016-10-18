@@ -66,7 +66,7 @@ func (a UDPPort) LayerType() gopacket.LayerType {
 		return LayerTypeDNS
 	case 6343:
 		return LayerTypeSFlow
-	case 4789:
+	case 4789, 8472:
 		return LayerTypeVxlan
 	default:
 		// special case for non-iana vxlan ports

@@ -89,6 +89,7 @@ package layers
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/google/gopacket"
 )
 
@@ -98,6 +99,43 @@ var VxlanUdpPorts []UDPPort = make([]UDPPort, 0)
 
 func ExtendVxlanUdpPorts(udp UDPPort) {
 	VxlanUdpPorts = append(VxlanUdpPorts, udp)
+}
+
+type VxlanEthernet struct {
+	Ethernet
+}
+
+// SerializeTo writes the serialized form of this layer into the
+// SerializationBuffer, implementing gopacket.SerializableLayer.
+// See the docs for gopacket.SerializableLayer for more info.
+func (eth *VxlanEthernet) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
+	if len(eth.DstMAC) != 6 {
+		return fmt.Errorf("invalid dst MAC: %v", eth.DstMAC)
+	}
+	if len(eth.SrcMAC) != 6 {
+		return fmt.Errorf("invalid src MAC: %v", eth.SrcMAC)
+	}
+	payload := b.Bytes()
+	bytes, err := b.PrependBytes(14)
+	if err != nil {
+		return err
+	}
+	copy(bytes, eth.DstMAC)
+	copy(bytes[6:], eth.SrcMAC)
+	if eth.Length != 0 || eth.EthernetType == EthernetTypeLLC {
+		if opts.FixLengths {
+			eth.Length = uint16(len(payload))
+		}
+		if eth.EthernetType != EthernetTypeLLC {
+			return fmt.Errorf("ethernet type %v not compatible with length value %v", eth.EthernetType, eth.Length)
+		} else if eth.Length > 0x0600 {
+			return fmt.Errorf("invalid ethernet length %v", eth.Length)
+		}
+		binary.BigEndian.PutUint16(bytes[12:], eth.Length)
+	} else {
+		binary.BigEndian.PutUint16(bytes[12:], uint16(eth.EthernetType))
+	}
+	return nil
 }
 
 type VXLAN struct {
