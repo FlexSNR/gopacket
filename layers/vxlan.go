@@ -101,6 +101,7 @@ func ExtendVxlanUdpPorts(udp UDPPort) {
 	VxlanUdpPorts = append(VxlanUdpPorts, udp)
 }
 
+// created to ensure that the ethernet frame is not padded
 type VxlanEthernet struct {
 	Ethernet
 }
