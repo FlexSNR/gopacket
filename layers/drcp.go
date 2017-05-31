@@ -1320,8 +1320,6 @@ const (
 	AddressSyncTlv
 )
 
-type FdbEntryAttribute uint16
-
 // ASCP Messages
 const (
 	ASCPTLVTypeAddressSync DRCPTlvTypeLength = 1 << 10
@@ -1329,23 +1327,23 @@ const (
 )
 
 const (
-	fdbAttrReserved FdbEntryAttribute = 0xC000
-	fdbAttrState    FdbEntryAttribute = 0x2000
-	fdbAttrPortType FdbEntryAttribute = 0x1000
-	fdbAttrVid      FdbEntryAttribute = 0xFFF
+	fdbAttrReserved uint16 = 0xC000
+	fdbAttrState    uint16 = 0x2000
+	fdbAttrPortType uint16  = 0x1000
+	fdbAttrVid      uint16  = 0xFFF
 )
 
-// FdbEntry ...
-type FdbEntry struct {
-	macAttr FdbEntryAttribute // 2 bytes
-	macAddr [6]uint8          // 6 bytes
+// AscpFdbEntry ...
+type AscpFdbEntry struct {
+	MacAttr uint16 // 2 bytes
+	MacAddr [6]uint8          // 6 bytes
 }
 
 // ASCPMacAddressSyncTlv ASCP Mac Address Sync Tlv
 // TlvTypes (Address Sync = 0x1 and Address Req = 0x2)
 type ASCPMacAddressSyncTlv struct {
 	TlvTypeLength DRCPTlvTypeLength
-	FdbEntries    []FdbEntry
+	FdbEntries    []AscpFdbEntry
 }
 
 // ASPDU Address Synchronization PDU
@@ -1406,11 +1404,11 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 				TlvTypeLength: v.TlvTypeLength,
 			}
 
-			// Length includes TlvTypeLength followed by FdbEntries (FdbEntry is 8 octets)
+			// Length includes TlvTypeLength followed by FdbEntries (AscpFdbEntry is 8 octets)
 			for i := uint16(2); i < v.TlvTypeLength.GetLength(); i += 8 {
-				fdbEntry := FdbEntry{
-					macAttr: FdbEntryAttribute(binary.BigEndian.Uint16(v.Value[i : i+2])),
-					macAddr: [6]uint8{v.Value[i+3], v.Value[i+4], v.Value[i+5],
+				fdbEntry := AscpFdbEntry{
+					MacAttr: uint16(binary.BigEndian.Uint16(v.Value[i : i+2])),
+					MacAddr: [6]uint8{v.Value[i+3], v.Value[i+4], v.Value[i+5],
 						v.Value[i+6], v.Value[i+7], v.Value[i+8]},
 				}
 				macAddressSyncTlv.FdbEntries = append(macAddressSyncTlv.FdbEntries, fdbEntry)
@@ -1431,11 +1429,11 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
    Annex G IEEE Std 802.1AX-2014
 	 Fig G.2 - ASPDU Structure
    +----------------------------+
-   | SubType = AS               |  1 octet  
+   | SubType = AS               |  1 octet
    +----------------------------+
-   | Version Number             |  1 octet  
+   | Version Number             |  1 octet
    +----------------------------+
-   | MAC Address 	            |  X octets 
+   | MAC Address 	            |  X octets
    | Synchronization TLVs		|
    +----------------------------+
    | TLV_type = Terminator      |  1 octet
@@ -1554,17 +1552,17 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 | MAC Address               | 6octets |
 +-------------------------------------+
 */
-func serializeFdbEntry(bytes []byte, fdbEntry FdbEntry, startIdx uint8) error {
+func serializeFdbEntry(bytes []byte, fdbEntry AscpFdbEntry, startIdx uint8) error {
 
 	// Add fdbEntry Attribute info to the packet
-	binary.BigEndian.PutUint16(bytes[startIdx:], uint16(fdbEntry.macAttr))
+	binary.BigEndian.PutUint16(bytes[startIdx:], uint16(fdbEntry.MacAttr))
 	// Add fdbEntry macAddr info to the packet
-	bytes[startIdx+2] = byte(fdbEntry.macAddr[0])
-	bytes[startIdx+3] = byte(fdbEntry.macAddr[1])
-	bytes[startIdx+4] = byte(fdbEntry.macAddr[2])
-	bytes[startIdx+5] = byte(fdbEntry.macAddr[3])
-	bytes[startIdx+6] = byte(fdbEntry.macAddr[4])
-	bytes[startIdx+7] = byte(fdbEntry.macAddr[5])
+	bytes[startIdx+2] = byte(fdbEntry.MacAddr[0])
+	bytes[startIdx+3] = byte(fdbEntry.MacAddr[1])
+	bytes[startIdx+4] = byte(fdbEntry.MacAddr[2])
+	bytes[startIdx+5] = byte(fdbEntry.MacAddr[3])
+	bytes[startIdx+6] = byte(fdbEntry.MacAddr[4])
+	bytes[startIdx+7] = byte(fdbEntry.MacAddr[5])
 
 	return nil
 }
@@ -1586,26 +1584,50 @@ func (ascp *ASPDU) serializeTerminator(b gopacket.SerializeBuffer) error {
 	return nil
 }
 
-func getMacAttrReserved(fdbAttr FdbEntryAttribute) FdbEntryAttribute {
+func GetMacAttrReserved(fdbAttr uint16) uint16 {
 
 	return ((fdbAttr & fdbAttrReserved) >> 15)
 
 }
 
-func getMacAttrState(fdbAttr FdbEntryAttribute) FdbEntryAttribute {
+func GetMacAttrState(fdbAttr uint16) uint16 {
 
 	return ((fdbAttr & fdbAttrState) >> 14)
 
 }
 
-func getMacAttrPortType(fdbAttr FdbEntryAttribute) FdbEntryAttribute {
+func GetMacAttrPortType(fdbAttr uint16) uint16 {
 
 	return ((fdbAttr & fdbAttrPortType) >> 13)
 
 }
 
-func getMacAttrVid(fdbAttr FdbEntryAttribute) FdbEntryAttribute {
+func GetMacAttrVid(fdbAttr uint16) uint16 {
 
 	return (fdbAttr & fdbAttrVid)
+
+}
+
+// True - Learn
+// False - delete/age
+func IsMacAttrStateLearn(fdbAttr uint16) bool {
+
+	if GetMacAttrState(fdbAttr) == 1 {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+// True - Agg Port
+// False - Non IPL Port (orphan port)
+func IsMacAttrPortType(fdbAttr uint16) bool {
+
+	if GetMacAttrPortType(fdbAttr) == 1 {
+		return true
+	} else {
+		return false
+	}
 
 }
