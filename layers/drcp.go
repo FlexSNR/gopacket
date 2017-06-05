@@ -1305,6 +1305,11 @@ func (v *DRCPTlvTypeLength) GetLength() uint16 {
 	return uint16(*v) & 0x3ff
 }
 
+func (v *DRCPTlvTypeLength) ClearLength(length uint16) {
+     *v ^= DRCPTlvTypeLength(length)
+}
+
+
 // ASCP Address Synchronization Control Protocol
 // 802.1ax-2014 ASPDU Annex G.5.5.1
 // Struct will contain all valid TLV's in ASCP however they are only valid if the
@@ -1318,6 +1323,12 @@ const (
 	TerminatorTlv = iota
 	AddressReqTlv
 	AddressSyncTlv
+)
+
+// ASCP TLV constants
+const (
+    MaxFdbEntriesPerSyncTlv = 31
+    AscpFdbEntrySize = 8
 )
 
 // ASCP Messages
@@ -1349,8 +1360,8 @@ type ASCPMacAddressSyncTlv struct {
 // ASPDU Address Synchronization PDU
 type ASPDU struct {
 	BaseLayer
-	Version            DRCPVersion
 	SubType            DRCPSubProtocol
+	Version            DRCPVersion
 	AddressSyncEntries []ASCPMacAddressSyncTlv
 	Terminator         DRCPTerminatorTlv
 }
@@ -1452,14 +1463,22 @@ func (ascp *ASPDU) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Seriali
 		return err
 	}
 
+fmt.Println("Entered SerializeTo ASPDU ##############")
+
 	bytes[0] = byte(ascp.SubType)
 	bytes[1] = byte(ascp.Version)
+
+     fmt.Println("########SerializeTo##############")
+     fmt.Println(b.Bytes())
+     fmt.Println("######################")
 
 	// loop through Address Sync Tlvs and encode based on Tlv type (Req and Sync Tlvs)
 	for _, addressSyncTlv := range ascp.AddressSyncEntries {
 
 		tlvLen := addressSyncTlv.TlvTypeLength.GetLength()
+fmt.Printf("addressSyncTlv Encode len %d ##############",tlvLen)
 		if tlvLen != 0 {
+fmt.Println("calling serializeMacAddressSyncTlv ##############")
 			err = serializeMacAddressSyncTlv(b, addressSyncTlv)
 			if err != nil {
 				return err
@@ -1467,11 +1486,11 @@ func (ascp *ASPDU) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Seriali
 		}
 	}
 
+fmt.Println("serializeTerminator ##############")
 	err = ascp.serializeTerminator(b)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -1506,6 +1525,7 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 
 	var startIdx uint8
 
+fmt.Println("Entered SerializeMacAddressSyncTlv  ##############")
 	// Get Tlv length (tlvLen = N * 8 octets where each octet is an FdbEntry)
 	tlvLen := addressSyncTlv.TlvTypeLength.GetLength()
 
@@ -1520,6 +1540,9 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 		fmt.Println("Error in Serialize to AddressReqTlv ")
 		return err
 	}
+     fmt.Println("########SerializeMacAddressSyncTlv##############")
+     fmt.Println(b.Bytes())
+     fmt.Println("######################")
 
 	// Add TlvTypeLength info to the packet
 	binary.BigEndian.PutUint16(bytes[0:], uint16(addressSyncTlv.TlvTypeLength))
@@ -1529,6 +1552,7 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 	// Add each fdbEntry to the packet.
 	// Increment by octet for each fdbEntry
 	for _, fdbEntry := range addressSyncTlv.FdbEntries {
+fmt.Println("Adding Fdb Entries Encoding  ##############")
 		serializeFdbEntry(bytes, fdbEntry, startIdx)
 		startIdx = startIdx + 8
 	}
