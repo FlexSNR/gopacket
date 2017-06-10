@@ -82,6 +82,14 @@ const (
 	SlowProtocolTypeOSSP SlowProtocolType = 10
 )
 
+type DrcpProtocolType byte
+
+// DRCP protocol has 2 type - DRCP and ASCP subtypes
+const (
+DrcpProtocolTypeDRCP    DrcpProtocolType = 1
+DrcpProtocolTypeASCP    DrcpProtocolType = 2
+)
+
 // IPProtocol is an enumeration of IP protocol values, and acts as a decoder
 // for any type it supports.
 type IPProtocol uint8
@@ -308,6 +316,7 @@ var (
 	Dot11TypeMetadata        [256]EnumMetadata
 	USBTypeMetadata          [256]EnumMetadata
 	SlowProtocolTypeMetadata [256]EnumMetadata
+	DrcpSubTypeMetadata      [256]EnumMetadata
 )
 
 func (a EthernetType) Decode(data []byte, p gopacket.PacketBuilder) error {
@@ -327,6 +336,15 @@ func (a SlowProtocolType) String() string {
 }
 func (a SlowProtocolType) LayerType() gopacket.LayerType {
 	return SlowProtocolTypeMetadata[a].LayerType
+}
+func (a DrcpProtocolType) Decode(data []byte, p gopacket.PacketBuilder) error {
+	return DrcpSubTypeMetadata[a].DecodeWith.Decode(data, p)
+}
+func (a DrcpProtocolType) String() string {
+	return DrcpSubTypeMetadata[a].Name
+}
+func (a DrcpProtocolType) LayerType() gopacket.LayerType {
+	return DrcpSubTypeMetadata[a].LayerType
 }
 func (a IPProtocol) Decode(data []byte, p gopacket.PacketBuilder) error {
 	return IPProtocolMetadata[a].DecodeWith.Decode(data, p)
@@ -471,7 +489,7 @@ func init() {
 	EthernetTypeMetadata[EthernetTypeQinQ] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeDot1Q), Name: "Dot1Q", LayerType: LayerTypeDot1Q}
 	EthernetTypeMetadata[EthernetTypeTransparentEthernetBridging] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeEthernet), Name: "TransparentEthernetBridging", LayerType: LayerTypeEthernet}
 	EthernetTypeMetadata[EthernetTypeSlowProtocol] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeSlowProtocol), Name: "SlowProtocol", LayerType: LayerTypeSlowProtocol}
-	EthernetTypeMetadata[EthernetTypeDRCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeDRCP), Name: "DistributedRelayControlProtocol", LayerType: LayerTypeDRCP}
+	EthernetTypeMetadata[EthernetTypeDRCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeDRCPProtocol), Name: "DistributedRelayControlProtocol", LayerType: LayerTypeDRCPProtocol}
 
 	IPProtocolMetadata[IPProtocolIPv4] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeIPv4), Name: "IPv4", LayerType: LayerTypeIPv4}
 	IPProtocolMetadata[IPProtocolTCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeTCP), Name: "TCP", LayerType: LayerTypeTCP}
@@ -586,4 +604,7 @@ func init() {
 	// TODO part of slow protocol but not implemented
 	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOAM), Name: "LACP", LayerType: LayerTypeOAM}
 	//SlowProtocolTypeMetadata[EthernetSlowProtocolTypeLACP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeOSSP), Name: "LACP", LayerType: LayerTypeOSSP}
+
+	DrcpSubTypeMetadata[DrcpProtocolTypeDRCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeDRCP), Name: "DistributedRelayControlProtocol", LayerType: LayerTypeDRCP}
+	DrcpSubTypeMetadata[DrcpProtocolTypeASCP] = EnumMetadata{DecodeWith: gopacket.DecodeFunc(decodeASCP), Name: "AddressSyncControlProtocol", LayerType: LayerTypeASCP}
 }

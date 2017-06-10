@@ -268,6 +268,32 @@ func (l *DRCP) LayerType() gopacket.LayerType {
 	return LayerTypeDRCP
 }
 
+type DrcpProtocol struct {
+	BaseLayer
+	SubType DrcpProtocolType
+}
+
+// LayerType returns LayerTypeDrcpProtocol
+func (d *DrcpProtocol) LayerType() gopacket.LayerType { return LayerTypeDRCPProtocol }
+
+
+// decodeDRCPProtocol
+func decodeDRCPProtocol(data []byte, p gopacket.PacketBuilder) error {
+	drcp := &DrcpProtocol{
+		BaseLayer: BaseLayer{data[:1], data[1:]},
+		SubType:   DrcpProtocolType(data[0]),
+	}
+
+	if drcp.SubType !=  DrcpProtocolTypeDRCP &&
+		drcp.SubType !=  DrcpProtocolTypeASCP {
+		return fmt.Errorf("DRCP Protocol has invalid type")
+	}
+
+	p.AddLayer(drcp)
+	return p.NextDecoder(drcp.SubType)
+}
+
+
 // TOOD Function only decodes Version 1
 func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 	drcp := &DRCP{BaseLayer: BaseLayer{Contents: data}}
