@@ -289,7 +289,8 @@ func decodeDRCPProtocol(data []byte, p gopacket.PacketBuilder) error {
 		return fmt.Errorf("DRCP Protocol has invalid type")
 	}
 
-	p.AddLayer(drcp)
+    fmt.Println("decodeDRCPProtocol NextDecoder",drcp.SubType)
+
 	return p.NextDecoder(drcp.SubType)
 }
 
@@ -299,8 +300,11 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 	drcp := &DRCP{BaseLayer: BaseLayer{Contents: data}}
 	var vals []DRCPValue
 
+fmt.Println("decodeDRCP entered")
+
 	drcp.SubType = DRCPSubProtocol(data[0])
 	drcp.Version = DRCPVersion(data[1])
+
 	vData := data[2:]
 	//fmt.Printf("DECODE: vData %+v\n", vData)
 	for len(vData) > 0 {
@@ -509,6 +513,8 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 		return fmt.Errorf("Missing mandatory DRCP TLV")
 	}
 	p.AddLayer(drcp)
+
+    fmt.Println("decodeDRCP done")
 	return nil
 }
 
@@ -1407,6 +1413,8 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 	ascp := &ASPDU{BaseLayer: BaseLayer{Contents: data}}
 	var vals []DRCPValue
 
+    fmt.Println("decodeASCP: Entered")
+
 	ascp.SubType = DRCPSubProtocol(data[0])
 	ascp.Version = DRCPVersion(data[1])
 	vData := data[2:]
@@ -1414,12 +1422,14 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 	for len(vData) > 0 {
 		val := DRCPValue{TlvTypeLength: DRCPTlvTypeLength(binary.BigEndian.Uint16(vData[0:2]))}
 		Length := val.TlvTypeLength.GetLength()
+        fmt.Println("Ascp: Decode AddressSync TLV Length", Length)
 		if Length > 0 {
 			val.Value = vData[DRCPTlvAndLengthSize : Length+DRCPTlvAndLengthSize]
 		}
 
 		vals = append(vals, val)
 		if val.TlvTypeLength.GetTlv() == TerminatorTlv {
+        fmt.Println("Ascp: Terminator Tlv")
 			break
 		}
 		if len(vData) < int(Length) {
@@ -1436,29 +1446,39 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 		// TerminatorTlv. End of ASCP PDU
 		if tlvType == TerminatorTlv {
 			pktEnd = true
+            fmt.Println("Ascp: Decode Terminator TLV")
 		} else if (tlvType == ASCPTLVTypeAddressSync) || (tlvType == ASCPTLVTypeAddressReq) {
 			macAddressSyncTlv := ASCPMacAddressSyncTlv{
 				TlvTypeLength: v.TlvTypeLength,
 			}
 
+            fmt.Println("Ascp: Decode AddressSync TLV tlvType", tlvType, v.TlvTypeLength.GetLength())
 			// Length includes TlvTypeLength followed by FdbEntries (AscpFdbEntry is 8 octets)
-			for i := uint16(2); i < v.TlvTypeLength.GetLength(); i += 8 {
-				fdbEntry := AscpFdbEntry{
+			//for i := uint16(2); i < v.TlvTypeLength.GetLength(); i += 8 {
+			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i += 8 {
+            fmt.Println("Inside for loop fdbEntry")
+
+		        fdbEntry := AscpFdbEntry{
 					MacAttr: uint16(binary.BigEndian.Uint16(v.Value[i : i+2])),
-					MacAddr: [6]uint8{v.Value[i+3], v.Value[i+4], v.Value[i+5],
-						v.Value[i+6], v.Value[i+7], v.Value[i+8]},
+					MacAddr: [6]uint8{v.Value[i+2], v.Value[i+3], v.Value[i+4],
+						                v.Value[i+5], v.Value[i+6], v.Value[i+7]},
 				}
+
+                fmt.Println("Ascp: Decode FdbEntry", fdbEntry)
 				macAddressSyncTlv.FdbEntries = append(macAddressSyncTlv.FdbEntries, fdbEntry)
 			}
 			// Add the decoded Tlv to Address Sync Tlv Entries
 			ascp.AddressSyncEntries = append(ascp.AddressSyncEntries, macAddressSyncTlv)
+            fmt.Println("Ascp: Decode Adding macAddressSyncTlv", macAddressSyncTlv)
 		}
 	}
 
 	if !pktEnd {
+        fmt.Println("Ascp: Missing Mandatory ASCP TLV")
 		return fmt.Errorf("Missing mandatory ASCP TLV")
 	}
 	p.AddLayer(ascp)
+    fmt.Println("Ascp: Decode Done")
 	return nil
 }
 
