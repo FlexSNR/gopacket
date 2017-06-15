@@ -1654,27 +1654,62 @@ func (ascp *ASPDU) serializeTerminator(b gopacket.SerializeBuffer) error {
 	return nil
 }
 
+// Get Reserved Attribute
 func GetMacAttrReserved(fdbAttr uint16) uint16 {
 
-	return ((fdbAttr & fdbAttrReserved) >> 15)
+	return ((fdbAttr & fdbAttrReserved) >> 14)
 
 }
 
+// Get State Attribute
 func GetMacAttrState(fdbAttr uint16) uint16 {
 
-	return ((fdbAttr & fdbAttrState) >> 14)
+	return ((fdbAttr & fdbAttrState) >> 13)
 
 }
 
+// Get Port Type Attribute
 func GetMacAttrPortType(fdbAttr uint16) uint16 {
 
-	return ((fdbAttr & fdbAttrPortType) >> 13)
+	return ((fdbAttr & fdbAttrPortType) >> 12)
 
 }
 
+// Get Vid Attribute
 func GetMacAttrVid(fdbAttr uint16) uint16 {
 
 	return (fdbAttr & fdbAttrVid)
+
+}
+
+// Set Reserved Attribute
+func SetMacAttrReserved(fdbAttr uint16, rsvd uint16) uint16 {
+
+	return (fdbAttr | (rsvd << 14))
+
+}
+
+// Set State Attribute
+func SetMacAttrState(fdbAttr uint16, set uint16) uint16 {
+
+   if (set==1) {
+	return (fdbAttr | (set << 13))
+   }
+
+   return fdbAttr
+}
+
+// Set Port Attribute
+func SetMacAttrPortType(fdbAttr uint16, set uint16) uint16 {
+
+	return (fdbAttr | (set << 12))
+
+}
+
+// Set Vid Attribute
+func SetMacAttrVid(fdbAttr uint16, vid uint16) uint16 {
+
+	return (fdbAttr | vid)
 
 }
 
