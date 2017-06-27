@@ -125,7 +125,9 @@ var (
 	LayerTypeBPDU  = gopacket.RegisterLayerType(121, gopacket.LayerTypeMetadata{"STP", gopacket.DecodeFunc(decodeBPDU)})
 	LayerTypePVST  = gopacket.RegisterLayerType(122, gopacket.LayerTypeMetadata{"PVST", gopacket.DecodeFunc(decodePVST)})
 	LayerTypeVxlan = gopacket.RegisterLayerType(123, gopacket.LayerTypeMetadata{"VXLAN", gopacket.DecodeFunc(decodeVxlan)})
-	LayerTypeDRCP  = gopacket.RegisterLayerType(124, gopacket.LayerTypeMetadata{"DRCP", gopacket.DecodeFunc(decodeDRCP)})
+	LayerTypeDRCPProtocol                = gopacket.RegisterLayerType(124, gopacket.LayerTypeMetadata{"DRCP Protocol", gopacket.DecodeFunc(decodeDRCPProtocol)})
+	LayerTypeDRCP  = gopacket.RegisterLayerType(125, gopacket.LayerTypeMetadata{"DRCP", gopacket.DecodeFunc(decodeDRCP)})
+    LayerTypeASCP  = gopacket.RegisterLayerType(126, gopacket.LayerTypeMetadata{"ASCP", gopacket.DecodeFunc(decodeASCP)})
 )
 
 var (
