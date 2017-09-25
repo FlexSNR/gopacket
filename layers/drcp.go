@@ -10,9 +10,9 @@ package layers
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
-    "net"
 	"github.com/google/gopacket"
+	"math"
+	"net"
 )
 
 /*
@@ -276,7 +276,6 @@ type DrcpProtocol struct {
 // LayerType returns LayerTypeDrcpProtocol
 func (d *DrcpProtocol) LayerType() gopacket.LayerType { return LayerTypeDRCPProtocol }
 
-
 // decodeDRCPProtocol
 func decodeDRCPProtocol(data []byte, p gopacket.PacketBuilder) error {
 	drcp := &DrcpProtocol{
@@ -284,23 +283,22 @@ func decodeDRCPProtocol(data []byte, p gopacket.PacketBuilder) error {
 		SubType:   DrcpProtocolType(data[0]),
 	}
 
-	if drcp.SubType !=  DrcpProtocolTypeDRCP &&
-		drcp.SubType !=  DrcpProtocolTypeASCP {
+	if drcp.SubType != DrcpProtocolTypeDRCP &&
+		drcp.SubType != DrcpProtocolTypeASCP {
 		return fmt.Errorf("DRCP Protocol has invalid type")
 	}
 
-    //fmt.Println("decodeDRCPProtocol NextDecoder",drcp.SubType)
+	//fmt.Println("decodeDRCPProtocol NextDecoder",drcp.SubType)
 
 	return p.NextDecoder(drcp.SubType)
 }
-
 
 // TOOD Function only decodes Version 1
 func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 	drcp := &DRCP{BaseLayer: BaseLayer{Contents: data}}
 	var vals []DRCPValue
 
-//fmt.Println("decodeDRCP entered")
+	//fmt.Println("decodeDRCP entered")
 
 	drcp.SubType = DRCPSubProtocol(data[0])
 	drcp.Version = DRCPVersion(data[1])
@@ -514,7 +512,7 @@ func decodeDRCP(data []byte, p gopacket.PacketBuilder) error {
 	}
 	p.AddLayer(drcp)
 
-    //fmt.Println("decodeDRCP done")
+	//fmt.Println("decodeDRCP done")
 	return nil
 }
 
@@ -1338,17 +1336,42 @@ func (v *DRCPTlvTypeLength) GetLength() uint16 {
 }
 
 func (v *DRCPTlvTypeLength) ClearLength(length uint16) {
-     *v ^= DRCPTlvTypeLength(length)
+	*v ^= DRCPTlvTypeLength(length)
 }
-
 
 // ASCP Address Synchronization Control Protocol
 // 802.1ax-2014 ASPDU Annex G.5.5.1
 // Struct will contain all valid TLV's in ASCP however they are only valid if the
 // TLV type is set properly, this goes for encoding and decoding
 
-//ASCPTlvtype indicates ASCP message type
-type ASCPTlvtype uint8
+type ASCPTlvTypeLength uint32
+
+func (v *ASCPTlvTypeLength) SetTlv(tlv uint32) {
+	*v |= ASCPTlvTypeLength(tlv)
+}
+
+func (v *ASCPTlvTypeLength) SetLength(length uint32) {
+	*v |= ASCPTlvTypeLength(length)
+}
+
+func (v *ASCPTlvTypeLength) ClearLength(length uint32) {
+	*v ^= ASCPTlvTypeLength(length)
+}
+
+func (v *ASCPTlvTypeLength) GetTlv() ASCPTlvTypeLength {
+	return *v & 0xfffC0000
+}
+
+// To Revisit based on MTU :: TBD
+func (v *ASCPTlvTypeLength) GetLength() uint32 {
+	return uint32(*v) & 0x00003fff
+}
+
+// ASCPTlvTypeLength is a TLV + Length value inside a ASPDU packet layer.
+type ASCPValue struct {
+	TlvTypeLength ASCPTlvTypeLength
+	Value         []byte
+}
 
 //ASCP Tlv message type
 const (
@@ -1359,34 +1382,42 @@ const (
 
 // ASCP TLV constants
 const (
-    MaxFdbEntriesPerSyncTlv = 31
-    AscpFdbEntrySize = 8
+	MaxFdbEntriesPerSyncTlv = 150
+	AscpFdbEntrySize        = 8
+	ASCPTlvAndLengthSize    = 4
+	ASCPTLVTerminatorLength = 0
 )
 
 // ASCP Messages
 const (
-	ASCPTLVTypeAddressSync DRCPTlvTypeLength = 1 << 10
-	ASCPTLVTypeAddressReq  DRCPTlvTypeLength = 2 << 10
+	ASCPTLVTypeTerminator  ASCPTlvTypeLength = 0 << 18
+	ASCPTLVTypeAddressSync ASCPTlvTypeLength = 1 << 18
+	ASCPTLVTypeAddressReq  ASCPTlvTypeLength = 2 << 18
 )
 
 const (
 	fdbAttrReserved uint16 = 0xC000
 	fdbAttrState    uint16 = 0x2000
-	fdbAttrPortType uint16  = 0x1000
-	fdbAttrVid      uint16  = 0xFFF
+	fdbAttrPortType uint16 = 0x1000
+	fdbAttrVid      uint16 = 0xFFF
 )
 
 // AscpFdbEntry ...
 type AscpFdbEntry struct {
-	MacAttr uint16 // 2 bytes
-	MacAddr [6]uint8          // 6 bytes
+	MacAttr uint16   // 2 bytes
+	MacAddr [6]uint8 // 6 bytes
 }
 
 // ASCPMacAddressSyncTlv ASCP Mac Address Sync Tlv
 // TlvTypes (Address Sync = 0x1 and Address Req = 0x2)
 type ASCPMacAddressSyncTlv struct {
-	TlvTypeLength DRCPTlvTypeLength
+	TlvTypeLength ASCPTlvTypeLength
 	FdbEntries    map[string]*AscpFdbEntry
+}
+
+// ASCP Terminator TLV
+type ASCPTerminatorTlv struct {
+	TlvTypeLength ASCPTlvTypeLength
 }
 
 // ASPDU Address Synchronization PDU
@@ -1395,7 +1426,7 @@ type ASPDU struct {
 	SubType            DRCPSubProtocol
 	Version            DRCPVersion
 	AddressSyncEntries []ASCPMacAddressSyncTlv
-	Terminator         DRCPTerminatorTlv
+	Terminator         ASCPTerminatorTlv
 }
 
 // LayerType returns LayerTypeASCP
@@ -1411,31 +1442,31 @@ func (ascp *ASPDU) CanDecode() gopacket.LayerClass {
 // decodeASCP decodes AS PDU received from the peer portal
 func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 	ascp := &ASPDU{BaseLayer: BaseLayer{Contents: data}}
-	var vals []DRCPValue
+	var vals []ASCPValue
 
-    //fmt.Println("decodeASCP: Entered")
+	fmt.Println("decodeASCP: Entered")
 
 	ascp.SubType = DRCPSubProtocol(data[0])
 	ascp.Version = DRCPVersion(data[1])
 	vData := data[2:]
 
 	for len(vData) > 0 {
-		val := DRCPValue{TlvTypeLength: DRCPTlvTypeLength(binary.BigEndian.Uint16(vData[0:2]))}
+		val := ASCPValue{TlvTypeLength: ASCPTlvTypeLength(binary.BigEndian.Uint32(vData[0:4]))}
 		Length := val.TlvTypeLength.GetLength()
-        //fmt.Println("Ascp: Decode AddressSync TLV Length", Length)
+		fmt.Println("Ascp: Decode AddressSync TLV Length", Length)
 		if Length > 0 {
-			val.Value = vData[DRCPTlvAndLengthSize : Length+DRCPTlvAndLengthSize]
+			val.Value = vData[ASCPTlvAndLengthSize : Length+ASCPTlvAndLengthSize]
 		}
 
 		vals = append(vals, val)
 		if val.TlvTypeLength.GetTlv() == TerminatorTlv {
-        //fmt.Println("Ascp: Terminator Tlv")
+			//fmt.Println("Ascp: Terminator Tlv")
 			break
 		}
 		if len(vData) < int(Length) {
-			return fmt.Errorf("Malformed DRCP Header")
+			return fmt.Errorf("Malformed ASCP Header")
 		}
-		vData = vData[Length+DRCPTlvAndLengthSize:]
+		vData = vData[Length+ASCPTlvAndLengthSize:]
 	}
 
 	pktEnd := false
@@ -1446,42 +1477,40 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 		// TerminatorTlv. End of ASCP PDU
 		if tlvType == TerminatorTlv {
 			pktEnd = true
-            //fmt.Println("Ascp: Decode Terminator TLV")
+			//fmt.Println("Ascp: Decode Terminator TLV")
 		} else if (tlvType == ASCPTLVTypeAddressSync) || (tlvType == ASCPTLVTypeAddressReq) {
 			macAddressSyncTlv := ASCPMacAddressSyncTlv{
 				TlvTypeLength: v.TlvTypeLength,
-                FdbEntries:    make(map[string]*AscpFdbEntry),
+				FdbEntries:    make(map[string]*AscpFdbEntry),
 			}
 
-            //fmt.Println("Ascp: Decode AddressSync TLV tlvType", tlvType, v.TlvTypeLength.GetLength())
+			fmt.Println("Ascp: Decode AddressSync TLV tlvType", tlvType, v.TlvTypeLength.GetLength())
 			// Length includes TlvTypeLength followed by FdbEntries (AscpFdbEntry is 8 octets)
-			//for i := uint16(2); i < v.TlvTypeLength.GetLength(); i += 8 {
-			for i := uint16(0); i < v.TlvTypeLength.GetLength(); i += 8 {
-            //fmt.Println("Inside for loop fdbEntry")
+			for i := uint32(0); i < v.TlvTypeLength.GetLength(); i += 8 {
 
-		        fdbEntry := &AscpFdbEntry{
+				fdbEntry := &AscpFdbEntry{
 					MacAttr: uint16(binary.BigEndian.Uint16(v.Value[i : i+2])),
 					MacAddr: [6]uint8{v.Value[i+2], v.Value[i+3], v.Value[i+4],
-						                v.Value[i+5], v.Value[i+6], v.Value[i+7]},
+						v.Value[i+5], v.Value[i+6], v.Value[i+7]},
 				}
 
-            // Key to FdbEntries
-            netAddr := net.HardwareAddr{
-                fdbEntry.MacAddr[0],
-                fdbEntry.MacAddr[1],
-                fdbEntry.MacAddr[2],
-                fdbEntry.MacAddr[3],
-                fdbEntry.MacAddr[4],
-                fdbEntry.MacAddr[5],
-                }
+				// Key to FdbEntries
+				netAddr := net.HardwareAddr{
+					fdbEntry.MacAddr[0],
+					fdbEntry.MacAddr[1],
+					fdbEntry.MacAddr[2],
+					fdbEntry.MacAddr[3],
+					fdbEntry.MacAddr[4],
+					fdbEntry.MacAddr[5],
+				}
 
 				//macAddressSyncTlv.FdbEntries = append(macAddressSyncTlv.FdbEntries, fdbEntry)
-                fmt.Println("Ascp: Decode FdbEntry", fdbEntry)
+				//fmt.Println("Ascp: Decode FdbEntry", fdbEntry)
 				macAddressSyncTlv.FdbEntries[netAddr.String()] = fdbEntry
 			}
 			// Add the decoded Tlv to Address Sync Tlv Entries
 			ascp.AddressSyncEntries = append(ascp.AddressSyncEntries, macAddressSyncTlv)
-            //fmt.Println("Ascp: Decode Adding macAddressSyncTlv", macAddressSyncTlv)
+			fmt.Println("Ascp: Decode Adding macAddressSyncTlv", macAddressSyncTlv)
 		}
 	}
 
@@ -1489,7 +1518,7 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 		return fmt.Errorf("Missing mandatory ASCP TLV")
 	}
 	p.AddLayer(ascp)
-    //fmt.Println("Ascp: Decode Done")
+	fmt.Println("Ascp: Decode Done")
 	return nil
 }
 
@@ -1516,11 +1545,11 @@ func decodeASCP(data []byte, p gopacket.PacketBuilder) error {
 func (ascp *ASPDU) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
 	bytes, err := b.PrependBytes(2)
 	if err != nil {
-		fmt.Println("Error in Serialize to for DRCP")
+		fmt.Println("Error in Serialize to for ASCP")
 		return err
 	}
 
-//fmt.Println("Entered SerializeTo ASPDU ##############")
+	fmt.Println("ASCP-TX: Entered SerializeTo ASPDU ##############")
 
 	bytes[0] = byte(ascp.SubType)
 	bytes[1] = byte(ascp.Version)
@@ -1529,7 +1558,6 @@ func (ascp *ASPDU) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Seriali
 	for _, addressSyncTlv := range ascp.AddressSyncEntries {
 
 		tlvLen := addressSyncTlv.TlvTypeLength.GetLength()
-        fmt.Printf("addressSyncTlv Encode len %d ##############",tlvLen)
 		if tlvLen != 0 {
 			err = serializeMacAddressSyncTlv(b, addressSyncTlv)
 			if err != nil {
@@ -1574,7 +1602,7 @@ func (ascp *ASPDU) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Seriali
 // If tlv length is 0, then no information available for that TLV, skip...
 func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPMacAddressSyncTlv) error {
 
-	var startIdx uint8
+	var startIdx uint16
 
 	// Get Tlv length (tlvLen = N * 8 octets where each octet is an FdbEntry)
 	tlvLen := addressSyncTlv.TlvTypeLength.GetLength()
@@ -1584,21 +1612,22 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 		return nil
 	}
 
-	// Allocate buffer for FdbEntries
-	bytes, err := b.AppendBytes(int(tlvLen) + 2)
+	// Allocate buffer for TlvType and Length
+	bytes, err := b.AppendBytes(int(tlvLen) + 4)
 	if err != nil {
 		fmt.Println("Error in Serialize to AddressReqTlv ")
 		return err
 	}
 	// Add TlvTypeLength info to the packet
-	binary.BigEndian.PutUint16(bytes[0:], uint16(addressSyncTlv.TlvTypeLength))
+	binary.BigEndian.PutUint32(bytes[0:], uint32(addressSyncTlv.TlvTypeLength))
+	fmt.Printf("ASCP-TX: addressSyncTlv Encode tlvlen %x len %x##############",
+		uint32(addressSyncTlv.TlvTypeLength), int(tlvLen))
 
-	startIdx = 2
+	startIdx = 4
 
 	// Add each fdbEntry to the packet.
 	// Increment by octet for each fdbEntry
 	for _, fdbEntry := range addressSyncTlv.FdbEntries {
-        fmt.Println("Adding Fdb Entries Encoding  ##############",fdbEntry)
 		serializeFdbEntry(bytes, fdbEntry, startIdx)
 		startIdx = startIdx + 8
 	}
@@ -1622,7 +1651,7 @@ func serializeMacAddressSyncTlv(b gopacket.SerializeBuffer, addressSyncTlv ASCPM
 | MAC Address               | 6octets |
 +-------------------------------------+
 */
-func serializeFdbEntry(bytes []byte, fdbEntry *AscpFdbEntry, startIdx uint8) error {
+func serializeFdbEntry(bytes []byte, fdbEntry *AscpFdbEntry, startIdx uint16) error {
 
 	// Add fdbEntry Attribute info to the packet
 	binary.BigEndian.PutUint16(bytes[startIdx:], uint16(fdbEntry.MacAttr))
@@ -1639,17 +1668,17 @@ func serializeFdbEntry(bytes []byte, fdbEntry *AscpFdbEntry, startIdx uint8) err
 
 func (ascp *ASPDU) serializeTerminator(b gopacket.SerializeBuffer) error {
 
-	if ascp.Terminator.TlvTypeLength.GetTlv() != DRCPTLVTypeTerminator {
+	if ascp.Terminator.TlvTypeLength.GetTlv() != ASCPTLVTypeTerminator {
 		return fmt.Errorf("Error in Serialize to for ASCP Terminator TLV incorrect %d", ascp.Terminator.TlvTypeLength.GetTlv())
 	}
 
-	bytes, err := b.AppendBytes(int(ascp.Terminator.TlvTypeLength.GetLength()) + 2)
+	bytes, err := b.AppendBytes(int(ascp.Terminator.TlvTypeLength.GetLength()) + 4)
 	if err != nil {
 		fmt.Println("Error in Serialize PortalConfigInfo for ASCP")
 		return err
 	}
 
-	binary.BigEndian.PutUint16(bytes[0:], uint16(ascp.Terminator.TlvTypeLength))
+	binary.BigEndian.PutUint32(bytes[0:], uint32(ascp.Terminator.TlvTypeLength))
 
 	return nil
 }
@@ -1692,11 +1721,11 @@ func SetMacAttrReserved(fdbAttr uint16, rsvd uint16) uint16 {
 // Set State Attribute
 func SetMacAttrState(fdbAttr uint16, set uint16) uint16 {
 
-   if (set==1) {
-	return (fdbAttr | (set << 13))
-   }
+	if set == 1 {
+		return (fdbAttr | (set << 13))
+	}
 
-   return fdbAttr
+	return fdbAttr
 }
 
 // Set Port Attribute
